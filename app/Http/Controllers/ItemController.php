@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ItemRequest;
 use App\Models\Item;
 use App\Serializers\ItemSerializer;
 use App\Serializers\ItemsSerializer;
@@ -18,14 +19,8 @@ class ItemController extends Controller
         return JsonResponse::create(['items' => (new ItemsSerializer($items))->getData()]);
     }
 
-    public function store(Request $request)
+    public function store(ItemRequest $request)
     {
-        $this->validate($request, [
-          'name' => 'required|string|max:255',
-          'price' => 'required|numeric',
-           'url' => 'required|url',
-          'description' => 'required|string',
-        ]);
 
         $converter = new CommonMarkConverter(['html_input' => 'escape', 'allow_unsafe_links' => false]);
 
@@ -50,15 +45,8 @@ class ItemController extends Controller
         return new JsonResponse(['item' => $serializer->getData()]);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(ItemRequest $request, int $id): JsonResponse
     {
-        $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'url' => 'required|url',
-            'description' => 'required|string',
-        ]);
-
         $converter = new CommonMarkConverter(['html_input' => 'escape', 'allow_unsafe_links' => false]);
 
         $item = Item::findOrFail($id);
