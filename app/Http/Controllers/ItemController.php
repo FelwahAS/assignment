@@ -74,4 +74,11 @@ class ItemController extends Controller
             ]
         );
     }
+
+    public function statistics(Request $request){
+
+        $result = Item::getStatistics();
+
+        return new JsonResponse($result);
+    }
 }
