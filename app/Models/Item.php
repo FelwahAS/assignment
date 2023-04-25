@@ -12,36 +12,68 @@ class Item extends Model
 
     protected $guarded = ['id'];
 
-    /*
-     * I have elected to include the TLD as part of the unique identifier of a website
+    /**
+     * Returns the TLD of an item.
+     * note: I have elected to include the TLD as part of the unique identifier of a website
      * (eg. amazon.sa will be considered different from amazon.com)
-     * */
-    public function getWebsiteHostAttribute(){
+     *
+     * @return string
+     */
+    public function getWebsiteHostAttribute() {
 
         $url = parse_url($this->url);
         return $url["host"];
 
     }
 
-    public static function getStatistics(){
-        //====== 1. total items count ======
-        $statistics['total_items'] = Item::count();
+    /**
+     * Returns the total items count.
+     *
+     * @return int
+     */
+    public static function getTotalCount(){
 
-        //====== 2. average price of an item ======
-        $statistics['average_price'] = Item::avg('price');
+        return Item::count();
 
-        //====== 3. the website with the highest total price of its items ======
+    }
+
+    /**
+     * Returns the average price of an item.
+     *
+     * @return float
+     */
+    public static function getAveragePrice(){
+
+        return number_format(Item::avg('price'),2);
+
+    }
+
+    /**
+     * Returns the website with the highest total price of its items
+     *
+     * @return string
+     */
+    public static function getHighestPriceWebsite(){
+
         $websitesTotals = Item::all('url','price')->groupBy('website_host')->map(function($website_items, $website) {
             return [
                 'website'   => $website,
                 'total'     => $website_items->sum('price')
             ];
         });
-        $statistics['highest_website'] = $websitesTotals->firstWhere('total', $websitesTotals->max('total'))["website"];
 
-        //====== 4. total price of items added this month ======
-        $statistics['total_price_current_month'] = Item::select('price')->whereMonth('created_at', Carbon::now()->month)->sum('price');
+        return $websitesTotals->firstWhere('total', $websitesTotals->max('total'))["website"];
 
-        return $statistics;
+    }
+
+    /**
+     * Returns the total price of items added in the current month
+     *
+     * @return float
+     */
+    public static function getTotalPriceCurrentMonth(){
+
+        return number_format(Item::select('price')->whereMonth('created_at', Carbon::now()->month)->sum('price'),2);
+
     }
 }

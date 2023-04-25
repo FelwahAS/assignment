@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Resources\ItemsStatisticResource;
 use App\Models\Item;
 use Illuminate\Console\Command;
 
@@ -12,7 +13,7 @@ class GetStatistics extends Command
      *
      * @var string
      */
-    protected $signature = 'items:statistics {--type= : an option to display a specific statistic}';
+    protected $signature = 'items:statistics {--type=all : an option to display a specific statistic}';
 
     /**
      * The console command description.
@@ -40,27 +41,21 @@ class GetStatistics extends Command
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return void
      */
     public function handle()
     {
-        $result = Item::getStatistics();
+        $statistics = (new ItemsStatisticResource($this->option('type')))->resolve();
 
-        $statisticType = $this->option('type');
-
-        if(isset($statisticType)){
-            isset($result[$statisticType]) ? $this->info($result[$statisticType]) : $this->error(trans('item.errors.invalid_type'));
-        } else {
-            $this->table(
-                ['Statistic', 'Result'],
-                [
-                    ['Total items count', $result['total_items']],
-                    ['Average price of an item', $result['average_price']],
-                    ['The website with the highest total price of its items', $result['highest_website']],
-                    ['total price of items added this month', $result['total_price_current_month']],
-                ]
-            );
-
+        if(!$statistics){
+            $this->error(trans('item.errors.invalid_type'));
+            return;
         }
+
+        foreach($statistics as $key => $value)
+            $result[] = [trans('item.statistic_types.'.$key), $value];
+
+        $this->table([trans('item.statistic'), trans('item.result')], $result);
+
     }
 }
